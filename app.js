@@ -1,21 +1,37 @@
 const express = require('express');
-const app =express();
-const http= require('http');
-const ejs = require('ejs');
-const port=8000;
-// fs= require('fs');
-// signup = null;
-// signup = fs.readFileSync('./views/SignUp.ejs', 'utf-8');
-
-const server= http.createServer();
-const usersRouter=require('./routes/user');
-const User = require("./models/userschema");
 const mongoose = require("mongoose");
-app.set('view engine', 'ejs');
-app.set('views', './views');
+const app = express()
+const port=8000;
+const bodyParser = require('body-parser')
+
+const { MongoClient } = require('mongodb');
+const uri = "mongodb+srv://Pragya:Pragya@402001@cluster0.9acm9.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+client.connect(err => {
+  const collection = client.db("test").collection("devices");
+  // perform actions on the collection object
+  client.close();
+});
+
+  const db= mongoose.connection
+
+  db.on('error', (err)=>{
+      console.log(err)
+  })
+  
+  db.once('open', () => {
+      console.log("databse successfully connected")
+  })
+
+const User = require("./models/userschema");
+const AuthRoute = require('./routes/auth');
 
 
-server.listen( port,function(err){
+
+app.use(bodyParser.urlencoded({extended: true}))
+app.use(bodyParser.json())
+
+app.listen( port,function(err){
 if(err){
     console.log(err);
     return;
@@ -23,13 +39,9 @@ if(err){
 console.log("Server is runnning:", port);
 });
 
-// app.use('/sign-up',function(req,res){
-//     console.log('signup started');
-//     return res.render('SignUp');
-// });
+app.use('./api', AuthRoute)
+// app.use('./api/user',usersRouter)
 
-app.use('/user', usersRouter);
+module.exports = app
 
-// app.get("/signup", function(req,res) {
-//     return res.render("./views/SignUp.ejs");
-// });
+//,{userNewUrlParser: true, userUnifiedTopology: true , userCreateIndex:true, userFindAndModify:false}
